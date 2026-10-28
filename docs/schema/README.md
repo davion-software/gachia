@@ -36,7 +36,7 @@ Las restricciones SQL no sustituyen estas comprobaciones:
 5. Retomar una operación pendiente utilizando esos datos. Dentro de una transacción, comprobar la operación, el acceso y las dependencias vigentes; aplicar las reglas y precondiciones; guardar datos, historial y respuesta; y confirmar `succeeded`.
 6. Un rechazo de negocio posterior a la reserva conserva una respuesta `rejected`, sin cambios financieros. Un fallo técnico no se guarda como respuesta terminal: se reintenta la transacción completa con la misma clave y los datos ya resueltos.
 
-Dos solicitudes simultáneas con la misma clave compiten por la restricción única de operación. Solo una reserva gana; la otra recupera la fila y compara la huella. La ejecución financiera utiliza el protocolo de [batch del ADR 0008](../adr/0008-operaciones-duraderas-e-idempotencia.md), sin depender de una lectura previa ni de `BEGIN` interactivo.
+Dos solicitudes simultáneas con la misma clave compiten por la restricción única de operación. Solo una reserva gana; la otra recupera la fila y compara la huella. La ejecución financiera utiliza el protocolo de [batch del ADR 0008](../adr/0008_OPERACIONES_DURADERAS_E_IDEMPOTENCIA.md), sin depender de una lectura previa ni de `BEGIN` interactivo.
 
 La reserva permite mantener la fecha original incluso si un fallo retrasa el reintento hasta el día siguiente. No existe un borrado de pendientes ni se considera una fila pendiente una compra confirmada.
 

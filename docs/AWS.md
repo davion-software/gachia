@@ -1,6 +1,6 @@
 # Evaluación de AWS para Gachia
 
-Estado: histórico. Reemplazado por el [ADR 0009](adr/0009-cloudflare-workers-d1-y-void.md) y la [evaluación de Cloudflare](cloudflare.md). Los costos, región y servicios siguientes ya no describen el diseño vigente. La antigua [plantilla de AWS Budgets](../infra/budget.json) se conserva solo como referencia y no se despliega.
+Estado: histórico. Reemplazado por el [ADR 0009](adr/0009_CLOUDFLARE_WORKERS_D1_Y_VOID.md) y la [evaluación de Cloudflare](CLOUDFLARE.md). Los costos, región y servicios siguientes ya no describen el diseño vigente. La antigua [plantilla de AWS Budgets](../infra/budget.json) se conserva solo como referencia y no se despliega.
 
 Estado: combinación de servicios, región y retención confirmadas por el usuario. La evaluación de costos sigue pendiente de comprobar con una carga representativa. No se han creado recursos ni medido cargas.
 
@@ -54,4 +54,4 @@ Una base administrada de Lightsail parte de US$15 mensuales y supera por sí sol
 
 ## Avisos acordados
 
-Se han confirmado avisos de gasto acumulado a US$5, US$8 y US$10 y de previsión de superar US$10, manteniendo el servicio operativo hasta que el propietario decida un ajuste. El usuario configurará estos avisos más adelante; actualmente no están activos ni tienen destinatario definido. La plantilla conservada es histórica. La [guía vigente](avisos-gastos.md) la sustituye por vigilancia de cuotas gratuitas.
+Se han confirmado avisos de gasto acumulado a US$5, US$8 y US$10 y de previsión de superar US$10, manteniendo el servicio operativo hasta que el propietario decida un ajuste. El usuario configurará estos avisos más adelante; actualmente no están activos ni tienen destinatario definido. La plantilla conservada es histórica. La [guía vigente](AVISOS_DE_GASTOS.md) la sustituye por vigilancia de cuotas gratuitas.

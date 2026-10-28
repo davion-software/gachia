@@ -28,7 +28,7 @@ Fuentes: [límites de Workers](https://developers.cloudflare.com/workers/platfor
 - 50 llamadas a D1 por invocación de Worker. Un `batch()` cuenta como una llamada, no una por sentencia, según los límites actuales.
 - Cada sentencia del batch conserva sus límites: 100 parámetros, 100 KB de SQL, fila o valor de hasta 2 MB y consulta de hasta 30 segundos.
 
-D1 ejecuta consultas de una base de forma serial. `batch()` agrupa sentencias preparadas secuenciales en una transacción y revierte todo si alguna falla. No ofrece un callback transaccional con decisiones JavaScript entre sentencias. Un `UPDATE` que afecta cero filas no es un error: la implementación debe comprobar precondiciones dentro del SQL y provocar rollback si esperaba un cambio. Las reglas del [ADR 0008](adr/0008-operaciones-duraderas-e-idempotencia.md) concretan el protocolo.
+D1 ejecuta consultas de una base de forma serial. `batch()` agrupa sentencias preparadas secuenciales en una transacción y revierte todo si alguna falla. No ofrece un callback transaccional con decisiones JavaScript entre sentencias. Un `UPDATE` que afecta cero filas no es un error: la implementación debe comprobar precondiciones dentro del SQL y provocar rollback si esperaba un cambio. Las reglas del [ADR 0008](adr/0008_OPERACIONES_DURADERAS_E_IDEMPOTENCIA.md) concretan el protocolo.
 
 Las cuotas diarias agotadas hacen fallar consultas hasta medianoche UTC, sin borrar los datos ni cobrar excesos en Free. El almacenamiento lleno impide nuevas inserciones y cambios de esquema; no se resuelve esperando al día siguiente. Optimizar consultas e índices reduce lecturas, pero no elimina el crecimiento del historial.
 
@@ -56,4 +56,4 @@ La retención de operaciones sin vencimiento puede llenar los 500 MB. Vigilar cr
 
 Workers no implica residencia en `us-east-1`. No se promete una región fija ni residencia peruana de los datos. Revisar ubicación de D1 y requisitos de privacidad antes de producción.
 
-Wrangler con Hono y migraciones SQL es la alternativa si Void deja de encajar; mantiene los mismos límites. SQLite local elimina cuotas de proveedor pero requiere un equipo encendido y respaldos propios. Workers Paid o R2 por encima de la franquicia quedan fuera de US$0 y necesitan una nueva decisión. AWS queda como [evaluación histórica](aws.md).
+Wrangler con Hono y migraciones SQL es la alternativa si Void deja de encajar; mantiene los mismos límites. SQLite local elimina cuotas de proveedor pero requiere un equipo encendido y respaldos propios. Workers Paid o R2 por encima de la franquicia quedan fuera de US$0 y necesitan una nueva decisión. AWS queda como [evaluación histórica](AWS.md).

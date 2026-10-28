@@ -92,13 +92,13 @@ La clasificación automática es una secuencia que ejecuta el agente con las her
 
 Gachia funciona como un servicio disponible aunque la computadora del usuario esté apagada, mientras no se agoten las cuotas gratuitas. David ha elegido Cloudflare Workers Free, D1 Free y Void, con TypeScript y Hono. El presupuesto de alojamiento, datos y recuperación es US$0 mensuales, aparte de Grok Bot.
 
-No se exige una región AWS. La [evaluación de Cloudflare](cloudflare.md) detalla límites y alternativas.
+No se exige una región AWS. La [evaluación de Cloudflare](CLOUDFLARE.md) detalla límites y alternativas.
 
 La primera entrega es una instancia personal, accesible únicamente por el usuario y los agentes que autorice. No incluye registro público de usuarios.
 
 Los agentes pueden recibir credenciales revocables de lectura y escritura para gestionar los gastos. El propietario conserva la gestión de credenciales y las restauraciones completas mediante una identidad administrativa separada.
 
-La operación vigila el consumo en el dashboard de Cloudflare. Las cuotas de Workers Free y D1 Free producen fallos al agotarse, sin cargos por exceso. D1 documenta correo al alcanzar sus límites diarios. No se garantiza continuidad ni avisos anticipados. El [procedimiento](avisos-gastos.md) está pendiente de comprobar en la cuenta real.
+La operación vigila el consumo en el dashboard de Cloudflare. Las cuotas de Workers Free y D1 Free producen fallos al agotarse, sin cargos por exceso. D1 documenta correo al alcanzar sus límites diarios. No se garantiza continuidad ni avisos anticipados. El [procedimiento](AVISOS_DE_GASTOS.md) está pendiente de comprobar en la cuenta real.
 
 ## Reintentos y gastos similares
 
@@ -165,11 +165,11 @@ La idea de producto incluye estas capacidades. La primera entrega cubre el regis
 
 ## Criterios de aceptación
 
-Los [criterios de aceptación](criterios-aceptacion.md) describen cómo comprobar la primera versión. Son requisitos pendientes de implementación y verificación, no resultados de pruebas ya realizadas.
+Los [criterios de aceptación](CRITERIOS_DE_ACEPTACION.md) describen cómo comprobar la primera versión. Son requisitos pendientes de implementación y verificación, no resultados de pruebas ya realizadas.
 
 ## Diseño técnico
 
-El [diseño técnico](diseno-tecnico.md) recoge las decisiones confirmadas. Durante la implementación se concretarán:
+El [diseño técnico](DISENO_TECNICO.md) recoge las decisiones confirmadas. Durante la implementación se concretarán:
 
 - Estructura detallada y despliegue de TypeScript y Hono en Workers Free, con D1 Free y despliegue mediante Void.
 - Contrato de la API y formato de la skill para el agente.

@@ -4,7 +4,7 @@ Estado: procedimiento de diseño, sin cuenta desplegada ni notificaciones compro
 
 ## Mantener la cuenta en Free
 
-Usa Workers Free y D1 Free en la cuenta del propietario. No actives Workers Paid ni servicios adicionales para resolver cuotas. R2 permanece desactivado: su franquicia gratuita permite cargos por exceso. La [evaluación](cloudflare.md) recoge límites y respaldo opcional.
+Usa Workers Free y D1 Free en la cuenta del propietario. No actives Workers Paid ni servicios adicionales para resolver cuotas. R2 permanece desactivado: su franquicia gratuita permite cargos por exceso. La [evaluación](CLOUDFLARE.md) recoge límites y respaldo opcional.
 
 AWS Budgets y los avisos a US$5, US$8 y US$10 quedan retirados. La plantilla de AWS es histórica. En Workers Free y D1 Free agotar cuotas produce errores, no un cargo por sobreconsumo.
 

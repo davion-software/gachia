@@ -5,7 +5,7 @@ info:
   title: Gachia API — primer recorrido
   version: 0.1.0-design
   description: Contrato de diseño para registro y consulta. No hay servidor desplegado. Las mutaciones de corrección,
-    devoluciones, categorías, clasificación y exportación se documentan como ampliaciones posteriores en api.md.
+    devoluciones, categorías, clasificación y exportación se documentan como ampliaciones posteriores en API.md.
     Ejecución prevista con Hono en Workers Free y D1 Free, desplegada mediante Void, con presupuesto US$0.
     Los fallos de cuota del proveedor pueden quedar fuera de este contrato JSON; conservar la clave de idempotencia al reintentar.
 servers:
