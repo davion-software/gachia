@@ -1,0 +1,977 @@
+# Diseño: Hono en Workers Free y D1 Free, desplegado mediante Void.
+# Presupuesto US$0. Los fallos de cuota del proveedor pueden quedar fuera del contrato JSON.
+openapi: 3.1.1
+info:
+  title: Gachia API — primer recorrido
+  version: 0.1.0-design
+  description: Contrato de diseño para registro y consulta. No hay servidor desplegado. Las mutaciones de corrección,
+    devoluciones, categorías, clasificación y exportación se documentan como ampliaciones posteriores en API.md.
+    Ejecución prevista con Hono en Workers Free y D1 Free, desplegada mediante Void, con presupuesto US$0.
+    Los fallos de cuota del proveedor pueden quedar fuera de este contrato JSON; conservar la clave de idempotencia al reintentar.
+servers:
+- url: https://gachia.invalid
+  description: Dominio reservado de ejemplo; no es un despliegue.
+security:
+- BearerAuth: []
+tags:
+- name: Gastos
+- name: Consultas
+paths:
+  /v1/expenses:
+    post:
+      operationId: createExpense
+      summary: Registrar un gasto
+      description: La API resuelve PEN y la fecha de Lima cuando se omiten. El reintento devuelve la respuesta original,
+        incluso tras cambios posteriores del registro. Autenticación y permisos se comprueban antes del replay.
+      tags:
+      - Gastos
+      x-gachia-permission: write
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+        '409':
+          $ref: '#/components/responses/409'
+        '201':
+          description: Gasto registrado. Un replay conserva este estado HTTP y el resultado original.
+          headers:
+            Cache-Control:
+              description: Los datos financieros no se almacenan en cachés compartidas.
+              schema:
+                type: string
+                enum:
+                - no-store
+            ETag:
+              description: Etiqueta fuerte del recurso, con identificador y versión; devolverla completa en If-Match.
+              schema:
+                type: string
+                pattern: ^"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:[1-9][0-9]{0,18}"(?![\s\S])
+                minLength: 40
+                maxLength: 58
+              example: '"00000000-0000-4000-8000-000000000001:1"'
+            Operation-Id:
+              description: Identificador duradero de la operación de escritura.
+              schema:
+                type: string
+                format: uuid
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+              description: Ruta del gasto creado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+              example:
+                id: 00000000-0000-4000-8000-000000000001
+                amount: '20.00'
+                currency: PEN
+                occurred_on: '2026-10-28'
+                description: Almuerzo
+                category_id: null
+                refunded_amount: '0.00'
+                version: '1'
+                recorded_at: '2026-10-28T17:00:00Z'
+                updated_at: '2026-10-28T17:00:00Z'
+                deleted_at: null
+        '413':
+          $ref: '#/components/responses/413'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseCreate'
+            examples:
+              minimal:
+                value:
+                  amount: '20.00'
+                  description: Almuerzo
+              explicit:
+                value:
+                  amount: '19.90'
+                  currency: USD
+                  occurred_on: '2026-10-28'
+                  description: Suscripción mensual
+                  category_id: null
+      x-max-body-bytes: 65536
+    get:
+      operationId: listExpenses
+      summary: Listar gastos activos
+      description: 'Orden: occurred_on descendente, id descendente. Período y filtros se aplican antes de la paginación.
+        Los registros eliminados no aparecen. Las páginas reflejan datos vigentes y no garantizan una instantánea
+        común si hay modificaciones concurrentes.'
+      tags:
+      - Gastos
+      x-gachia-permission: read
+      parameters:
+      - $ref: '#/components/parameters/From'
+      - $ref: '#/components/parameters/To'
+      - $ref: '#/components/parameters/Currency'
+      - $ref: '#/components/parameters/CategoryId'
+      - $ref: '#/components/parameters/Uncategorized'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Resultado de la consulta.
+          headers:
+            Cache-Control:
+              description: Los datos financieros no se almacenan en cachés compartidas.
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpensePage'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/expenses/{expense_id}:
+    get:
+      operationId: getExpense
+      summary: Consultar un gasto por identificador
+      description: Permite consultar un gasto eliminado del propietario para revisar su estado y preparar una recuperación
+        futura. El estado eliminado aparece en deleted_at.
+      tags:
+      - Gastos
+      x-gachia-permission: read
+      parameters:
+      - $ref: '#/components/parameters/ExpenseId'
+      responses:
+        '200':
+          description: Resultado de la consulta.
+          headers:
+            Cache-Control:
+              description: Los datos financieros no se almacenan en cachés compartidas.
+              schema:
+                type: string
+                enum:
+                - no-store
+            ETag:
+              description: Etiqueta fuerte del recurso, con identificador y versión; devolverla completa en If-Match.
+              schema:
+                type: string
+                pattern: ^"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:[1-9][0-9]{0,18}"(?![\s\S])
+                minLength: 40
+                maxLength: 58
+              example: '"00000000-0000-4000-8000-000000000001:1"'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+        '404':
+          $ref: '#/components/responses/404'
+  /v1/reports/summary:
+    get:
+      operationId: getSummary
+      summary: Consultar totales y distribución
+      description: Agrega todo el período y los filtros, nunca solo una página. Gastos por occurred_on; devoluciones
+        por received_on, aun si la compra pertenece a otro período. La compra debe estar activa y la devolución
+        no eliminada. La categoría es la vigente del gasto. Sin filtro de moneda devuelve PEN y USD, incluidos sus
+        ceros. Un filtro de moneda devuelve solo esa moneda. Incluye una fila sin categoría cuando corresponde.
+      tags:
+      - Consultas
+      x-gachia-permission: read
+      parameters:
+      - $ref: '#/components/parameters/From'
+      - $ref: '#/components/parameters/To'
+      - $ref: '#/components/parameters/Currency'
+      - $ref: '#/components/parameters/CategoryId'
+      - $ref: '#/components/parameters/Uncategorized'
+      responses:
+        '200':
+          description: Resultado de la consulta.
+          headers:
+            Cache-Control:
+              description: Los datos financieros no se almacenan en cachés compartidas.
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Summary'
+              example:
+                period:
+                  from: '2026-10-01'
+                  to: '2026-10-31'
+                  timezone: America/Lima
+                  is_complete: false
+                filters:
+                  currency: null
+                  category_id: null
+                  uncategorized: false
+                generated_at: '2026-10-28T17:00:01Z'
+                currencies:
+                - currency: PEN
+                  expense_amount: '20.00'
+                  refund_amount: '0.00'
+                  net_amount: '20.00'
+                  expense_count: 1
+                  refund_count: 0
+                  categories:
+                  - category_id: null
+                    category_name: null
+                    expense_amount: '20.00'
+                    refund_amount: '0.00'
+                    net_amount: '20.00'
+                    expense_count: 1
+                    refund_count: 0
+                - currency: USD
+                  expense_amount: '0.00'
+                  refund_amount: '30.00'
+                  net_amount: '-30.00'
+                  expense_count: 0
+                  refund_count: 1
+                  categories:
+                  - category_id: null
+                    category_name: null
+                    expense_amount: '0.00'
+                    refund_amount: '30.00'
+                    net_amount: '-30.00'
+                    expense_count: 0
+                    refund_count: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/categories:
+    get:
+      operationId: listCategories
+      summary: Listar categorías
+      description: 'Orden: clave normalizada del nombre e id, ambos ascendentes. Incluye categorías desactivadas
+        si active=all; no se pueden asignar por estar listadas.'
+      tags:
+      - Consultas
+      x-gachia-permission: read
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      - name: active
+        in: query
+        schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          - all
+          default: 'true'
+      responses:
+        '200':
+          description: Resultado de la consulta.
+          headers:
+            Cache-Control:
+              description: Los datos financieros no se almacenan en cachés compartidas.
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryPage'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/operations/{operation_id}:
+    get:
+      operationId: getOperation
+      summary: Consultar el resultado de una operación
+      description: Devuelve datos del propietario autenticado; nunca credenciales ni cabeceras de autorización.
+        pending permite reintentar la escritura original con la misma clave; no autoriza crear otra compra.
+      tags:
+      - Consultas
+      x-gachia-permission: read
+      parameters:
+      - $ref: '#/components/parameters/OperationId'
+      responses:
+        '200':
+          description: Resultado de la consulta.
+          headers:
+            Cache-Control:
+              description: Los datos financieros no se almacenan en cachés compartidas.
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+        '404':
+          $ref: '#/components/responses/404'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Credencial opaca revocable emitida por el propietario. GET requiere lectura; POST requiere escritura.
+        No es una credencial administrativa de Cloudflare.
+  schemas:
+    Currency:
+      type: string
+      enum:
+      - PEN
+      - USD
+    PositiveMoney:
+      type: string
+      pattern: ^(?:(?:0|[1-9][0-9]{0,15}|[1-8][0-9]{16}|9[0-1][0-9]{15}|92[0-1][0-9]{14}|922[0-2][0-9]{13}|9223[0-2][0-9]{12}|92233[0-6][0-9]{11}|922337[0-1][0-9]{10}|92233720[0-2][0-9]{8}|922337203[0-5][0-9]{7}|9223372036[0-7][0-9]{6}|92233720368[0-4][0-9]{5}|922337203685[0-3][0-9]{4}|9223372036854[0-6][0-9]{3}|92233720368547[0-6][0-9]{2}|922337203685477[0-4][0-9]{1}|9223372036854775[0-7])\.[0-9]{2}|92233720368547758\.0[0-7])(?![\s\S])
+      maxLength: 20
+      description: Importe exacto entre 0.01 y 92233720368547758.07; sin signo, separadores de miles ni redondeo.
+      not:
+        const: '0.00'
+    UnsignedTotal:
+      type: string
+      pattern: ^(0|[1-9][0-9]*)\.[0-9]{2}(?![\s\S])
+      description: Total decimal exacto; puede superar el límite de un registro individual.
+    SignedTotal:
+      type: string
+      pattern: ^-?(0|[1-9][0-9]*)\.[0-9]{2}(?![\s\S])
+      not:
+        const: '-0.00'
+    Description:
+      type: string
+      minLength: 1
+      maxLength: 1000
+      pattern: \S
+    ExpenseCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        amount:
+          $ref: '#/components/schemas/PositiveMoney'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        occurred_on:
+          type: string
+          format: date
+        description:
+          $ref: '#/components/schemas/Description'
+        category_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+      required:
+      - amount
+      - description
+    Expense:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          $ref: '#/components/schemas/PositiveMoney'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        occurred_on:
+          type: string
+          format: date
+        description:
+          $ref: '#/components/schemas/Description'
+        category_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        refunded_amount:
+          $ref: '#/components/schemas/UnsignedTotal'
+        version:
+          type: string
+          pattern: ^[1-9][0-9]{0,18}(?![\s\S])
+          description: Versión opaca; usar el ETag para una modificación condicional.
+        recorded_at:
+          type: string
+          format: date-time
+          pattern: Z(?![\s\S])
+        updated_at:
+          type: string
+          format: date-time
+          pattern: Z(?![\s\S])
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+            pattern: Z(?![\s\S])
+          - type: 'null'
+      required:
+      - id
+      - amount
+      - currency
+      - occurred_on
+      - description
+      - category_id
+      - refunded_amount
+      - version
+      - recorded_at
+      - updated_at
+      - deleted_at
+    Category:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: \S
+        active:
+          type: boolean
+        version:
+          type: string
+          pattern: ^[1-9][0-9]{0,18}(?![\s\S])
+          description: Versión opaca; usar el ETag para una modificación condicional.
+        recorded_at:
+          type: string
+          format: date-time
+          pattern: Z(?![\s\S])
+        updated_at:
+          type: string
+          format: date-time
+          pattern: Z(?![\s\S])
+      required:
+      - id
+      - name
+      - active
+      - version
+      - recorded_at
+      - updated_at
+    Period:
+      type: object
+      additionalProperties: false
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        timezone:
+          type: string
+          enum:
+          - America/Lima
+        is_complete:
+          type: boolean
+          description: true si el día to ya terminó en Lima; no significa que los datos históricos sean inmutables.
+      required:
+      - from
+      - to
+      - timezone
+      - is_complete
+    Filters:
+      type: object
+      additionalProperties: false
+      properties:
+        currency:
+          anyOf:
+          - $ref: '#/components/schemas/Currency'
+          - type: 'null'
+        category_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        uncategorized:
+          type: boolean
+      required:
+      - currency
+      - category_id
+      - uncategorized
+    Page:
+      type: object
+      additionalProperties: false
+      properties:
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 200
+        next_cursor:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 4096
+          - type: 'null'
+      required:
+      - limit
+      - next_cursor
+    FieldError:
+      type: object
+      additionalProperties: false
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+      required:
+      - field
+      - code
+      - message
+    Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - code
+      - request_id
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        code:
+          type: string
+          pattern: ^[a-z][a-z0-9_]*(?![\s\S])
+        request_id:
+          type: string
+          format: uuid
+        operation_id:
+          type: string
+          format: uuid
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+      additionalProperties: true
+    ExpensePage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Expense'
+          maxItems: 200
+        page:
+          $ref: '#/components/schemas/Page'
+        period:
+          $ref: '#/components/schemas/Period'
+        filters:
+          $ref: '#/components/schemas/Filters'
+        generated_at:
+          type: string
+          format: date-time
+          pattern: Z(?![\s\S])
+      required:
+      - items
+      - page
+      - period
+      - filters
+      - generated_at
+    CategoryPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          maxItems: 200
+        page:
+          $ref: '#/components/schemas/Page'
+        generated_at:
+          type: string
+          format: date-time
+          pattern: Z(?![\s\S])
+      required:
+      - items
+      - page
+      - generated_at
+    CategoryTotals:
+      type: object
+      additionalProperties: false
+      properties:
+        category_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        category_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        expense_amount:
+          $ref: '#/components/schemas/UnsignedTotal'
+        refund_amount:
+          $ref: '#/components/schemas/UnsignedTotal'
+        net_amount:
+          $ref: '#/components/schemas/SignedTotal'
+        expense_count:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        refund_count:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+      required:
+      - category_id
+      - category_name
+      - expense_amount
+      - refund_amount
+      - net_amount
+      - expense_count
+      - refund_count
+    CurrencyTotals:
+      type: object
+      additionalProperties: false
+      properties:
+        currency:
+          $ref: '#/components/schemas/Currency'
+        expense_amount:
+          $ref: '#/components/schemas/UnsignedTotal'
+        refund_amount:
+          $ref: '#/components/schemas/UnsignedTotal'
+        net_amount:
+          $ref: '#/components/schemas/SignedTotal'
+        expense_count:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        refund_count:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryTotals'
+      required:
+      - currency
+      - expense_amount
+      - refund_amount
+      - net_amount
+      - expense_count
+      - refund_count
+      - categories
+    Summary:
+      type: object
+      additionalProperties: false
+      properties:
+        period:
+          $ref: '#/components/schemas/Period'
+        filters:
+          $ref: '#/components/schemas/Filters'
+        generated_at:
+          type: string
+          format: date-time
+          pattern: Z(?![\s\S])
+        currencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyTotals'
+          minItems: 1
+          maxItems: 2
+      required:
+      - period
+      - filters
+      - generated_at
+      - currencies
+    Operation:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        state:
+          type: string
+          enum:
+          - pending
+          - succeeded
+          - rejected
+        method:
+          type: string
+          enum:
+          - POST
+          - PATCH
+          - DELETE
+        path:
+          type: string
+        actor_id:
+          type: string
+          format: uuid
+        recorded_at:
+          type: string
+          format: date-time
+          pattern: Z(?![\s\S])
+        completed_at:
+          anyOf:
+          - type: string
+            format: date-time
+            pattern: Z(?![\s\S])
+          - type: 'null'
+        response_status:
+          anyOf:
+          - type: integer
+            minimum: 200
+            maximum: 499
+          - type: 'null'
+        response_body:
+          anyOf:
+          - type: object
+            additionalProperties: true
+          - type: 'null'
+      required:
+      - id
+      - state
+      - method
+      - path
+      - actor_id
+      - recorded_at
+      - completed_at
+      - response_status
+      - response_body
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: ^[A-Za-z0-9][A-Za-z0-9._:-]*(?![\s\S])
+      description: Clave nueva por instrucción de escritura y estable en sus reintentos; ámbito del propietario,
+        sin vencimiento automático.
+    From:
+      name: from
+      in: query
+      schema:
+        type: string
+        format: date
+      description: Inicio inclusivo en Lima. Enviar junto con to; omitir ambos usa el mes actual.
+    To:
+      name: to
+      in: query
+      schema:
+        type: string
+        format: date
+      description: Fin inclusivo en Lima. Debe ser igual o posterior a from.
+    Currency:
+      name: currency
+      in: query
+      schema:
+        $ref: '#/components/schemas/Currency'
+    CategoryId:
+      name: category_id
+      in: query
+      schema:
+        type: string
+        format: uuid
+    Uncategorized:
+      name: uncategorized
+      in: query
+      schema:
+        type: boolean
+        default: false
+      description: Si es true no puede enviarse category_id.
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 4096
+      description: Continuación opaca ligada al propietario, filtros y período resuelto; no representa una instantánea
+        permanente.
+    ExpenseId:
+      name: expense_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    OperationId:
+      name: operation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 40
+        maxLength: 58
+        pattern: ^"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:[1-9][0-9]{0,18}"(?![\s\S])
+      description: Precondición reservada para las futuras mutaciones de registros existentes. Enviar una única
+        etiqueta fuerte obtenida del recurso; no acepta *, listas ni etiquetas W/.
+  responses:
+    '400':
+      description: JSON mal formado, cabecera obligatoria ausente, cabecera inválida o cursor inválido.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '401':
+      description: Credencial ausente, inválida o revocada.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+          example: Bearer
+    '403':
+      description: Credencial válida sin permiso para la operación.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '404':
+      description: Recurso no encontrado para el propietario autenticado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '409':
+      description: Clave reutilizada con otro contenido u otro conflicto de estado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:gachia:problem:idempotency_conflict
+            title: idempotency_conflict
+            status: 409
+            code: idempotency_conflict
+            detail: La clave ya identifica una solicitud con contenido distinto.
+            request_id: 00000000-0000-4000-8000-000000000002
+    '422':
+      description: Esquema de entrada, valor, propiedad desconocida o regla financiera incumplidos.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:gachia:problem:validation_error
+            title: validation_error
+            status: 422
+            code: validation_error
+            detail: El importe debe ser una cadena decimal positiva de dos posiciones.
+            request_id: 00000000-0000-4000-8000-000000000002
+    '503':
+      description: Fallo transitorio; reintentar con la misma clave y contenido si es una escritura.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      headers:
+        Retry-After:
+          schema:
+            type: string
+          description: Segundos sugeridos antes de reintentar.
+    '413':
+      description: El cuerpo supera 65536 bytes.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '412':
+      description: La versión esperada ya no coincide con el registro; consultar el estado vigente antes de formular
+        otra operación.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '428':
+      description: Falta If-Match en una mutación que exige versión esperada.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+x-gachia-scope:
+  implemented: false
+  phase: first-vertical-slice
+  future_resources:
+  - expense-corrections
+  - refunds
+  - category-management
+  - classification
+  - exports
+  - audit-history

@@ -1,0 +1,74 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Monthly Gachia cost budget with actual and forecast notifications. No shutdown actions.",
+  "Parameters": {
+    "NotificationChannel": {
+      "Type": "String",
+      "Default": "EMAIL",
+      "AllowedValues": ["EMAIL", "SNS"]
+    },
+    "NotificationDestination": {
+      "Type": "String",
+      "MinLength": 1,
+      "AllowedPattern": "[^\\r\\n]+",
+      "Description": "Email address or existing SNS topic ARN, matching NotificationChannel."
+    }
+  },
+  "Resources": {
+    "GachiaMonthlyBudget": {
+      "Type": "AWS::Budgets::Budget",
+      "Properties": {
+        "Budget": {
+          "BudgetName": "gachia-monthly",
+          "BudgetType": "COST",
+          "TimeUnit": "MONTHLY",
+          "BudgetLimit": {"Amount": 10, "Unit": "USD"},
+          "FilterExpression": {
+            "Tags": {"Key": "Project", "Values": ["gachia"]}
+          }
+        },
+        "NotificationsWithSubscribers": [
+          {
+            "Notification": {
+              "NotificationType": "ACTUAL",
+              "ComparisonOperator": "GREATER_THAN",
+              "ThresholdType": "ABSOLUTE_VALUE",
+              "Threshold": 5
+            },
+            "Subscribers": [{"SubscriptionType": {"Ref": "NotificationChannel"}, "Address": {"Ref": "NotificationDestination"}}]
+          },
+          {
+            "Notification": {
+              "NotificationType": "ACTUAL",
+              "ComparisonOperator": "GREATER_THAN",
+              "ThresholdType": "ABSOLUTE_VALUE",
+              "Threshold": 8
+            },
+            "Subscribers": [{"SubscriptionType": {"Ref": "NotificationChannel"}, "Address": {"Ref": "NotificationDestination"}}]
+          },
+          {
+            "Notification": {
+              "NotificationType": "ACTUAL",
+              "ComparisonOperator": "GREATER_THAN",
+              "ThresholdType": "ABSOLUTE_VALUE",
+              "Threshold": 10
+            },
+            "Subscribers": [{"SubscriptionType": {"Ref": "NotificationChannel"}, "Address": {"Ref": "NotificationDestination"}}]
+          },
+          {
+            "Notification": {
+              "NotificationType": "FORECASTED",
+              "ComparisonOperator": "GREATER_THAN",
+              "ThresholdType": "ABSOLUTE_VALUE",
+              "Threshold": 10
+            },
+            "Subscribers": [{"SubscriptionType": {"Ref": "NotificationChannel"}, "Address": {"Ref": "NotificationDestination"}}]
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "BudgetName": {"Value": {"Ref": "GachiaMonthlyBudget"}}
+  }
+}
