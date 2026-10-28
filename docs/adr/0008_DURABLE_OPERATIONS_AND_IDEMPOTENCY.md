@@ -6,7 +6,7 @@ Una reserva pendiente conserva los valores predeterminados ya resueltos, sin cre
 
 ## Adaptación a D1
 
-Revisión del 28 de octubre de 2026 por el [ADR 0009](0009_CLOUDFLARE_WORKERS_D1_Y_VOID.md). La reserva `pending` sigue siendo una escritura independiente que conserva fecha, UUID y valores resueltos. El batch financiero guarda datos, historial y respuesta terminal juntos. No se utiliza `BEGIN` seguido de consultas desde JavaScript ni se supone que varias llamadas `run()` forman una transacción.
+Revisión del 28 de octubre de 2026 por el [ADR 0009](0009_CLOUDFLARE_WORKERS_D1_AND_VOID.md). La reserva `pending` sigue siendo una escritura independiente que conserva fecha, UUID y valores resueltos. El batch financiero guarda datos, historial y respuesta terminal juntos. No se utiliza `BEGIN` seguido de consultas desde JavaScript ni se supone que varias llamadas `run()` forman una transacción.
 
 `D1Database.batch()` ejecuta sentencias preparadas secuenciales y revierte la secuencia si una falla. Todas las dependencias leídas previamente se vuelven a comprobar mediante condiciones SQL: estado pendiente, versión, propietario, categoría activa, moneda y capacidad de devolución. La base serializa el batch, pero no protege lecturas anteriores hechas fuera de él.
 

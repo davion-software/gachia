@@ -134,4 +134,4 @@ Las mutaciones de la versión completa ampliarán OpenAPI conservando este model
 
 ## Ejecución y cuotas gratuitas
 
-La API se diseña con Hono en Workers Free, D1 Free y despliegue Void. El presupuesto es US$0. El agotamiento de cuotas o la terminación del Worker puede producir un error del proveedor fuera del contrato JSON. No confirma la escritura: el agente conserva `Idempotency-Key` y consulta o reintenta cuando se recupere el servicio, sin bucles agresivos. El [procedimiento de uso](AVISOS_DE_GASTOS.md) describe cortes y reinicio de cuotas.
+La API se diseña con Hono en Workers Free, D1 Free y despliegue Void. El presupuesto es US$0. El agotamiento de cuotas o la terminación del Worker puede producir un error del proveedor fuera del contrato JSON. No confirma la escritura: el agente conserva `Idempotency-Key` y consulta o reintenta cuando se recupere el servicio, sin bucles agresivos. El [procedimiento de uso](EXPENSE_NOTIFICATIONS.md) describe cortes y reinicio de cuotas.

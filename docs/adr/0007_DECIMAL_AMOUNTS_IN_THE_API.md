@@ -4,4 +4,4 @@ El contrato público expresa los importes con cadenas decimales de dos posicione
 
 Referencia: [precisión numérica en JSON](https://www.rfc-editor.org/rfc/rfc8259.html#section-6).
 
-La adaptación a D1 conserva este contrato y su rango. Las unidades menores se almacenan como TEXT canónico para evitar que los bindings y exports JavaScript conviertan int64 a coma flotante. El [modelo físico](../MODELO_FISICO.md) define conversiones exactas, límites y sumas con BigInt.
+La adaptación a D1 conserva este contrato y su rango. Las unidades menores se almacenan como TEXT canónico para evitar que los bindings y exports JavaScript conviertan int64 a coma flotante. El [modelo físico](../PHYSICAL_MODEL.md) define conversiones exactas, límites y sumas con BigInt.

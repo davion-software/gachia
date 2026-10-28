@@ -10,7 +10,7 @@ Estado: decisiones funcionales, de arquitectura y de operación confirmadas. Los
 - Time Travel de siete días. Export diario a R2 Standard opcional, desactivado por defecto por riesgo de cargos.
 - Sin región AWS fija. Workers usa la red de Cloudflare y D1 gestiona su ubicación.
 
-El [ADR 0009](adr/0009_CLOUDFLARE_WORKERS_D1_Y_VOID.md) reemplaza las decisiones AWS. La [evaluación de Cloudflare](CLOUDFLARE.md) registra límites, fuentes consultadas el 28 de octubre de 2026 y alternativas. El servicio acepta indisponibilidad al agotar cuotas gratuitas.
+El [ADR 0009](adr/0009_CLOUDFLARE_WORKERS_D1_AND_VOID.md) reemplaza las decisiones AWS. La [evaluación de Cloudflare](CLOUDFLARE.md) registra límites, fuentes consultadas el 28 de octubre de 2026 y alternativas. El servicio acepta indisponibilidad al agotar cuotas gratuitas.
 
 ## Carga de trabajo
 
@@ -59,7 +59,7 @@ Una versión del registro permitiría detectar que otro agente lo cambió despu�
 
 Para una devolución, la comprobación del importe pendiente y el guardado tendrían que coordinarse para impedir que dos solicitudes concurrentes superen conjuntamente el importe de la compra.
 
-Con D1 cada devolución actualiza también el total devuelto y la versión de la compra dentro del mismo `batch()`. Las condiciones SQL comprueban versión, moneda, importe disponible y estado. Una lectura previa no autoriza por sí sola la escritura. El [ADR 0008](adr/0008_OPERACIONES_DURADERAS_E_IDEMPOTENCIA.md) exige rollback si una condición deja cero filas cuando se esperaba una. Reintentar un fallo técnico conserva la misma clave y los valores ya resueltos.
+Con D1 cada devolución actualiza también el total devuelto y la versión de la compra dentro del mismo `batch()`. Las condiciones SQL comprueban versión, moneda, importe disponible y estado. Una lectura previa no autoriza por sí sola la escritura. El [ADR 0008](adr/0008_DURABLE_OPERATIONS_AND_IDEMPOTENCY.md) exige rollback si una condición deja cero filas cuando se esperaba una. Reintentar un fallo técnico conserva la misma clave y los valores ya resueltos.
 
 ## Clasificación por lotes
 
@@ -85,11 +85,11 @@ La copia portátil versionada conserva datos financieros, historial y operacione
 
 ## Control del presupuesto
 
-El presupuesto es US$0. Workers Free y D1 Free fallan al agotar cuotas y no cobran excesos. Se vigilan solicitudes, CPU, errores, filas y almacenamiento en el dashboard. D1 documenta correo al alcanzar cuotas diarias; no se presupone un aviso anticipado configurable en Free. No hay AWS Budgets ni avisos monetarios a US$5, US$8 o US$10. El [procedimiento de vigilancia](AVISOS_DE_GASTOS.md) describe comprobaciones y respuesta al límite.
+El presupuesto es US$0. Workers Free y D1 Free fallan al agotar cuotas y no cobran excesos. Se vigilan solicitudes, CPU, errores, filas y almacenamiento en el dashboard. D1 documenta correo al alcanzar cuotas diarias; no se presupone un aviso anticipado configurable en Free. No hay AWS Budgets ni avisos monetarios a US$5, US$8 o US$10. El [procedimiento de vigilancia](EXPENSE_NOTIFICATIONS.md) describe comprobaciones y respuesta al límite.
 
 ## Trabajo de implementación y verificación
 
-El [contrato HTTP](API.md), el [OpenAPI del primer recorrido](openapi.yaml), el [modelo de datos](MODELO_DE_DATOS.md) y el [DDL de diseño](schema/001-tables.sql) están preparados para revisión. Los artefactos tienen validación local, pero no se han ejecutado en un Worker o una base D1 real. El alcance y las comprobaciones pendientes están en la [guía del esquema](schema/README.md).
+El [contrato HTTP](API.md), el [OpenAPI del primer recorrido](openapi.yaml), el [modelo de datos](DATA_MODEL.md) y el [DDL de diseño](schema/001-tables.sql) están preparados para revisión. Los artefactos tienen validación local, pero no se han ejecutado en un Worker o una base D1 real. El alcance y las comprobaciones pendientes están en la [guía del esquema](schema/README.md).
 
 Los comandos administrativos y la infraestructura como código se elaborarán conforme a las decisiones cerradas. El consumo de cuotas y la restauración se comprobarán durante la implementación y verificación.
 

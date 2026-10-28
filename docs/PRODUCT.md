@@ -98,7 +98,7 @@ La primera entrega es una instancia personal, accesible únicamente por el usuar
 
 Los agentes pueden recibir credenciales revocables de lectura y escritura para gestionar los gastos. El propietario conserva la gestión de credenciales y las restauraciones completas mediante una identidad administrativa separada.
 
-La operación vigila el consumo en el dashboard de Cloudflare. Las cuotas de Workers Free y D1 Free producen fallos al agotarse, sin cargos por exceso. D1 documenta correo al alcanzar sus límites diarios. No se garantiza continuidad ni avisos anticipados. El [procedimiento](AVISOS_DE_GASTOS.md) está pendiente de comprobar en la cuenta real.
+La operación vigila el consumo en el dashboard de Cloudflare. Las cuotas de Workers Free y D1 Free producen fallos al agotarse, sin cargos por exceso. D1 documenta correo al alcanzar sus límites diarios. No se garantiza continuidad ni avisos anticipados. El [procedimiento](EXPENSE_NOTIFICATIONS.md) está pendiente de comprobar en la cuenta real.
 
 ## Reintentos y gastos similares
 
@@ -165,11 +165,11 @@ La idea de producto incluye estas capacidades. La primera entrega cubre el regis
 
 ## Criterios de aceptación
 
-Los [criterios de aceptación](CRITERIOS_DE_ACEPTACION.md) describen cómo comprobar la primera versión. Son requisitos pendientes de implementación y verificación, no resultados de pruebas ya realizadas.
+Los [criterios de aceptación](ACCEPTANCE_CRITERIA.md) describen cómo comprobar la primera versión. Son requisitos pendientes de implementación y verificación, no resultados de pruebas ya realizadas.
 
 ## Diseño técnico
 
-El [diseño técnico](DISENO_TECNICO.md) recoge las decisiones confirmadas. Durante la implementación se concretarán:
+El [diseño técnico](TECHNICAL_DESIGN.md) recoge las decisiones confirmadas. Durante la implementación se concretarán:
 
 - Estructura detallada y despliegue de TypeScript y Hono en Workers Free, con D1 Free y despliegue mediante Void.
 - Contrato de la API y formato de la skill para el agente.

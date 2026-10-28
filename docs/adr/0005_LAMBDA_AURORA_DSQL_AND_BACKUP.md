@@ -1,6 +1,6 @@
 # Utilizar Lambda, HTTP API, Aurora DSQL y AWS Backup en us-east-1
 
-Estado: Reemplazado por ADR-0009. Véase [Usar Cloudflare Workers, D1 y Void en el plan gratis](0009_CLOUDFLARE_WORKERS_D1_Y_VOID.md). El contenido siguiente conserva la decisión histórica.
+Estado: Reemplazado por ADR-0009. Véase [Usar Cloudflare Workers, D1 y Void en el plan gratis](0009_CLOUDFLARE_WORKERS_D1_AND_VOID.md). El contenido siguiente conserva la decisión histórica.
 
 El usuario elige Lambda con API Gateway HTTP API para ejecutar Fastify, Aurora DSQL para conservar SQL y transacciones con operación administrada, y AWS Backup para los respaldos. Frente a DynamoDB se conserva el modelo SQL para los informes; frente a una base con instancia reservada se utiliza facturación por consumo. Los componentes se alojan en `us-east-1` y se retienen 30 copias diarias, eliminando las más antiguas.
 

@@ -1,6 +1,6 @@
 # Modelo de datos de Gachia
 
-Estado: modelo de diseño listo para revisión. Las entidades y reglas están expresadas en un [esquema físico](MODELO_FISICO.md) y un [DDL](schema/001-tables.sql) que todavía no se han ejecutado en D1.
+Estado: modelo de diseño listo para revisión. Las entidades y reglas están expresadas en un [esquema físico](PHYSICAL_MODEL.md) y un [DDL](schema/001-tables.sql) que todavía no se han ejecutado en D1.
 
 ## Entidades financieras
 
@@ -44,7 +44,7 @@ Para comparaciones individuales se usa `CAST(... AS INTEGER)`. Una suma solo se 
 
 Los UUID se guardan como TEXT canónico en minúsculas, con guiones, generado y validado por la aplicación. Las fechas financieras son TEXT `YYYY-MM-DD`; los instantes UTC son TEXT de longitud fija `YYYY-MM-DDTHH:mm:ss.sssZ`. Los booleanos son INTEGER 0 o 1; el JSON es TEXT con `json_valid`. Las tablas STRICT, NOT NULL, CHECK, claves únicas y referencias compuestas conservan las restricciones. D1 mantiene las claves foráneas activas; SQLite local debe usar `PRAGMA foreign_keys = ON`. La aplicación valida también calendario, UUID y límites de cuerpos.
 
-La API mantiene las cadenas decimales de dos posiciones del [ADR 0007](adr/0007_IMPORTES_DECIMALES_EN_LA_API.md).
+La API mantiene las cadenas decimales de dos posiciones del [ADR 0007](adr/0007_DECIMAL_AMOUNTS_IN_THE_API.md).
 
 La versión del registro permite detectar cambios simultáneos. Para las devoluciones, el diseño técnico propone actualizar también la compra y su total devuelto en la misma transacción, de modo que dos devoluciones concurrentes no validen ambas contra el mismo importe pendiente sin detectar el conflicto.
 
@@ -70,6 +70,6 @@ Fuentes oficiales consultadas el 28 de octubre de 2026: [API de D1](https://deve
 
 ## Especificación y comprobaciones pendientes
 
-El [esquema físico](MODELO_FISICO.md) y el [contrato OpenAPI del primer recorrido](openapi.yaml) concretan las entidades y su representación pública. Los datos financieros usan fechas y unidades menores exactas como TEXT en D1; la API devuelve fechas de calendario, instantes UTC e importes decimales exactos como cadenas.
+El [esquema físico](PHYSICAL_MODEL.md) y el [contrato OpenAPI del primer recorrido](openapi.yaml) concretan las entidades y su representación pública. Los datos financieros usan fechas y unidades menores exactas como TEXT en D1; la API devuelve fechas de calendario, instantes UTC e importes decimales exactos como cadenas.
 
 El DDL contempla también devoluciones y clasificación para la versión completa. Sus rutas de modificación se formalizarán en ampliaciones posteriores de OpenAPI. La implementación debe ejecutar y comprobar el esquema con D1, además de probar las invariantes que dependen de varias filas.
